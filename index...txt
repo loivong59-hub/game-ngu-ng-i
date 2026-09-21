@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NEON RUNNER</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #111;
+            font-family: Arial, sans-serif;
+            color: white;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            min-height: 100vh;
+        }
+
+        #game {
+            position: relative;
+
+            width: 400px;
+            height: 650px;
+
+            overflow: hidden;
+
+            background:
+                linear-gradient(#151515, #252525);
+
+            border: 4px solid #ff4d00;
+
+            border-radius: 15px;
+
+            box-shadow:
+                0 0 30px rgba(255, 77, 0, 0.5);
+        }
+
+        /* ĐƯỜNG */
+
+        .road {
+            position: absolute;
+
+            width: 100%;
+            height: 100%;
+
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    #222 0px,
+                    #222 40px,
+                    #292929 40px,
+                    #292929 80px
+                );
+        }
+
+        /* VẠCH ĐƯỜNG */
+
+        .line {
+            position: absolute;
+
+            width: 6px;
+            height: 80px;
+
+            background: white;
+
+            opacity: 0.7;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+        }
+
+        /* PLAYER */
+
+        #player {
+            position: absolute;
+
+            width: 55px;
+            height: 75px;
+
+            bottom: 30px;
+            left: 172px;
+
+            background: #ff4d00;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 0 20px #ff4d00;
+
+            z-index: 5;
+        }
+
+        #player::before {
+            content: "";
+
+            position: absolute;
+
+            width: 25px;
+            height: 15px;
+
+            background: #111;
+
+            top: 10px;
+            left: 15px;
+
+            border-radius: 5px;
+        }
+
+        /* OBSTACLE */
+
+        .obstacle {
+            position: absolute;
+
+            width: 55px;
+            height: 65px;
+
+            background: #e00000;
+
+            border-radius: 10px;
+
+            box-shadow:
+                0 0 15px red;
+
+            z-index: 4;
+        }
+
+        /* COIN */
+
+        .coin {
+            position: absolute;
+
+            width: 30px;
+            height: 30px;
+
+            background: gold;
+
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 20px gold;
+
+            z-index: 3;
+        }
+
+        /* SCORE */
+
+        #score {
+            position: absolute;
+
+            top: 15px;
+            left: 20px;
+
+            font-size: 22px;
+
+            font-weight: bold;
+
+            z-index: 10;
+        }
+
+        #highScore {
+            position: absolute;
+
+            top: 45px;
+            left: 20px;
+
+            color: #aaa;
+
+            z-index: 10;
+        }
+
+        /* GAME OVER */
+
+        #gameOver {
+
+            display: none;
+
+            position: absolute;
+
+            inset: 0;
+
+            background:
+                rgba(0, 0, 0, 0.85);
+
+            z-index: 20;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            text-align: center;
+        }
+
+        #gameOver h1 {
+
+            color: #ff4d00;
+
+            font-size: 45px;
+
+            margin-bottom: 15px;
+        }
+
+        #gameOver p {
+
+            font-size: 20px;
+
+            margin-bottom: 25px;
+        }
+
+        button {
+
+            border: none;
+
+            padding: 14px 30px;
+
+            background: #ff4d00;
+
+            color: white;
+
+            border-radius: 8px;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+
+            background: #ff6a2a;
+        }
+
+
+        /* HƯỚNG DẪN */
+
+        #instruction {
+
+            position: fixed;
+
+            bottom: 15px;
+
+            text-align: center;
+
+            color: #aaa;
+
+            font-size: 14px;
+        }
+
+
+        @media(max-width: 450px) {
+
+            #game {
+
+                width: 95vw;
+
+                height: 90vh;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div id="game">
+
+    <div class="road"></div>
+
+
+    <!-- ĐƯỜNG -->
+
+    <div class="line" style="top:0"></div>
+
+    <div class="line" style="top:160px"></div>
+
+    <div class="line" style="top:320px"></div>
+
+    <div class="line" style="top:480px"></div>
+
+
+    <!-- SCORE -->
+
+    <div id="score">
+        Điểm: 0
+    </div>
+
+    <div id="highScore">
+        Kỷ lục: 0
+    </div>
+
+
+    <!-- PLAYER -->
+
+    <div id="player"></div>
+
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver">
+
+        <h1>
+            GAME OVER
+        </h1>
+
+        <p>
+            Điểm của bạn:
+            <b id="finalScore">0</b>
+        </p>
+
+        <button onclick="restartGame()">
+            CHƠI LẠI
+        </button>
+
+    </div>
+
+</div>
+
+
+<div id="instruction">
+
+    ← → để di chuyển | Ăn 🟡 | Né 🔴
+
+</div>
+
+
+<script>
+
+    /* =========================
+       BIẾN GAME
+    ========================= */
+
+    const game =
+        document.getElementById("game");
+
+    const player =
+        document.getElementById("player");
+
+    const scoreText =
+        document.getElementById("score");
+
+    const highScoreText =
+        document.getElementById("highScore");
+
+    const gameOverScreen =
+        document.getElementById("gameOver");
+
+    const finalScore =
+        document.getElementById("finalScore");
+
+
+    let playerX = 172;
+
+    let score = 0;
+
+    let highScore =
+        localStorage.getItem("highScore") || 0;
+
+    let gameRunning = true;
+
+    let speed = 5;
+
+    let obstacles = [];
+
+    let coins = [];
+
+    let keys = {};
+
+
+    highScoreText.innerText =
+        "Kỷ lục: " + highScore;
+
+
+    /* =========================
+       ĐIỀU KHIỂN
+    ========================= */
+
+    document.addEventListener(
+        "keydown",
+        function(e) {
+
+            keys[e.key] = true;
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keyup",
+        function(e) {
+
+            keys[e.key] = false;
+
+        }
+    );
+
+
+    /* =========================
+       TẠO VẬT CẢN
+    ========================= */
+
+    function createObstacle() {
+
+        if (!gameRunning)
+            return;
+
+
+        const obstacle =
+            document.createElement("div");
+
+        obstacle.className =
+            "obstacle";
+
+
+        let x =
+            Math.random() * 330;
+
+
+        obstacle.style.left =
+            x + "px";
+
+
+        obstacle.style.top =
+            "-80px";
+
+
+        game.appendChild(obstacle);
+
+
+        obstacles.push({
+
+            element: obstacle,
+
+            x: x,
+
+            y: -80
+
+        });
+
+    }
+
+
+    /* =========================
+       TẠO COIN
+    ========================= */
+
+    function createCoin() {
+
+        if (!gameRunning)
+            return;
+
+
+        const coin =
+            document.createElement("div");
+
+        coin.className =
+            "coin";
+
+
+        let x =
+            Math.random() * 360;
+
+
+        coin.style.left =
+            x + "px";
+
+
+        coin.style.top =
+            "-40px";
+
+
+        game.appendChild(coin);
+
+
+        coins.push({
+
+            element: coin,
+
+            x: x,
+
+            y: -40
+
+        });
+
+    }
+
+
+    /* =========================
+       KIỂM TRA VA CHẠM
+    ========================= */
+
+    function collision(a, b) {
+
+        return !(
+            a.x + a.width < b.x ||
+            a.x > b.x + b.width ||
+            a.y + a.height < b.y ||
+            a.y > b.y + b.height
+        );
+
+    }
+
+
+    /* =========================
+       GAME LOOP
+    ========================= */
+
+    function gameLoop() {
+
+        if (!gameRunning)
+            return;
+
+
+        /* DI CHUYỂN PLAYER */
+
+        if (keys["ArrowLeft"]) {
+
+            playerX -= 7;
+
+        }
+
+
+        if (keys["ArrowRight"]) {
+
+            playerX += 7;
+
+        }
+
+
+        /* GIỚI HẠN */
+
+        if (playerX < 0)
+            playerX = 0;
+
+
+        if (playerX > 345)
+            playerX = 345;
+
+
+        player.style.left =
+            playerX + "px";
+
+
+        /* PLAYER RECT */
+
+        const playerRect = {
+
+            x: playerX,
+
+            y: game.clientHeight - 105,
+
+            width: 55,
+
+            height: 75
+
+        };
+
+
+        /* =================
+           OBSTACLE
+        ================= */
+
+        obstacles.forEach(
+            (obstacle, index) => {
+
+                obstacle.y += speed;
+
+
+                obstacle.element.style.top =
+                    obstacle.y + "px";
+
+
+                const obstacleRect = {
+
+                    x: obstacle.x,
+
+                    y: obstacle.y,
+
+                    width: 55,
+
+                    height: 65
+
+                };
+
+
+                if (
+                    collision(
+                        playerRect,
+                        obstacleRect
+                    )
+                ) {
+
+                    endGame();
+
+                }
+
+
+                if (obstacle.y > 700) {
+
+                    obstacle.element.remove();
+
+                    obstacles.splice(
+                        index,
+                        1
+                    );
+
+                    score++;
+
+                    scoreText.innerText =
+                        "Điểm: " + score;
+
+
+                    /* TĂNG TỐC */
+
+                    if (
+                        score % 10 === 0
+                    ) {
+
+                        speed += 0.5;
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        /* =================
+           COINS
+        ================= */
+
+        coins.forEach(
+            (coin, index) => {
+
+                coin.y += speed;
+
+
+                coin.element.style.top =
+                    coin.y + "px";
+
+
+                const coinRect = {
+
+                    x: coin.x,
+
+                    y: coin.y,
+
+                    width: 30,
+
+                    height: 30
+
+                };
+
+
+                if (
+                    collision(
+                        playerRect,
+                        coinRect
+                    )
+                ) {
+
+                    score += 5;
+
+
+                    scoreText.innerText =
+                        "Điểm: " + score;
+
+
+                    coin.element.remove();
+
+                    coins.splice(
+                        index,
+                        1
+                    );
+
+                }
+
+
+                if (coin.y > 700) {
+
+                    coin.element.remove();
+
+                    coins.splice(
+                        index,
+                        1
+                    );
+
+                }
+
+            }
+        );
+
+
+        requestAnimationFrame(
+            gameLoop
+        );
+
+    }
+
+
+    /* =========================
+       GAME OVER
+    ========================= */
+
+    function endGame() {
+
+        gameRunning = false;
+
+
+        finalScore.innerText =
+            score;
+
+
+        gameOverScreen.style.display =
+            "flex";
+
+
+        if (
+            score > highScore
+        ) {
+
+            highScore = score;
+
+
+            localStorage.setItem(
+                "highScore",
+                highScore
+            );
+
+        }
+
+
+        highScoreText.innerText =
+            "Kỷ lục: " + highScore;
+
+    }
+
+
+    /* =========================
+       RESTART
+    ========================= */
+
+    function restartGame() {
+
+        obstacles.forEach(
+            obstacle =>
+                obstacle.element.remove()
+        );
+
+
+        coins.forEach(
+            coin =>
+                coin.element.remove()
+        );
+
+
+        obstacles = [];
+
+        coins = [];
+
+
+        score = 0;
+
+        speed = 5;
+
+        playerX = 172;
+
+        gameRunning = true;
+
+
+        scoreText.innerText =
+            "Điểm: 0";
+
+
+        player.style.left =
+            playerX + "px";
+
+
+        gameOverScreen.style.display =
+            "none";
+
+
+        gameLoop();
+
+    }
+
+
+    /* =========================
+       TẠO VẬT CẢN ĐỊNH KỲ
+    ========================= */
+
+    setInterval(
+        createObstacle,
+        1200
+    );
+
+
+    /* =========================
+       TẠO COIN
+    ========================= */
+
+    setInterval(
+        createCoin,
+        1800
+    );
+
+
+    /* =========================
+       START GAME
+    ========================= */
+
+    gameLoop();
+
+</script>
+
+
+</body>
+</html>
